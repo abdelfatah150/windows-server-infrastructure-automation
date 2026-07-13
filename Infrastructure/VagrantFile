@@ -1,0 +1,95 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  # Global Configuration
+
+  config.vm.box_check_update = false
+
+
+  # Primary Domain Controller (PDC)
+  
+  config.vm.define "PDC" do |pdc|
+
+    pdc.vm.box = "StefanScherer/windows_2019"
+    pdc.vm.box_version = "2020.02.12"
+
+    pdc.vm.network "private_network", ip: "192.168.1.2"
+
+    pdc.vm.provider "hyperv" do |hy|
+
+      hy.name = "PDC"
+      hy.gui = true
+
+      hy.memory = 2048
+      hy.cpus = 2
+
+    end
+
+    #Phase 1
+    pdc.vm.provision "shell", path: "Infrastructure\Scripts\Phase1\PDC\InitialSetup.ps1"
+
+    #Phase 2
+    pdc.vm.provision "shell", path: "Infrastructure\Scripts\Phase2\PDC\SetupDomain.ps1"
+    pdc.vm.provision "shell", path: "Infrastructure\Scripts\Phase2\PDC\EnableRecycleBin.ps1"
+
+  end
+
+
+  # Additional Domain Controller (ADC)
+
+  config.vm.define "ADC" do |adc|
+
+    adc.vm.box = "StefanScherer/windows_2019"
+    adc.vm.box_version = "2020.02.12"
+
+    adc.vm.network "private_network", ip: "192.168.1.3"
+
+    adc.vm.provider "hyperv" do |hy|
+
+      hy.name = "ADC"
+      hy.gui = true
+
+      hy.memory = 2048
+      hy.cpus = 2
+
+    end
+
+    #Phase 1
+    adc.vm.provision "shell", path: "Infrastructure\Scripts\Phase1\ADC\InitialSetup.ps1"
+
+    #Phase 2
+    adc.vm.provision "shell", path: "Infrastructure\Scripts\Phase2\ADC\SetupADC.ps1"
+
+  end
+
+
+  # Client Machine
+
+  config.vm.define "CLIENT" do |client|
+
+    client.vm.box = "gusztavvargadr/windows-10"
+    client.vm.box_version = "2511.0.0"
+
+    client.vm.network "private_network", ip: "192.168.1.22"
+
+    client.vm.provider "hyperv" do |hy|
+
+      hy.name = "CLIENT"
+      hy.gui = true
+
+      hy.memory = 2048
+      hy.cpus = 2
+
+    end
+
+    #Phase 1
+    client.vm.provision "shell", path: "Infrastructure\Scripts\Phase1\CLIENT\InitialSetup.ps1"
+
+    #Phase 2
+    client.vm.provision "shell", path: "Infrastructure\Scripts\Phase2\CLIENT\JoinDomain.ps1"
+
+  end
+
+end
