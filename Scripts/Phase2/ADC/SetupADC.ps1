@@ -20,7 +20,7 @@ foreach ($feature in $features)
 
 # Domain Administrator Credentials
 $Password = ConvertTo-SecureString `
-"123@asd" `
+"V@grant2026!" `
 -AsPlainText `
 -Force
 

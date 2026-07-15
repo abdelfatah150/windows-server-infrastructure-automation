@@ -2,7 +2,7 @@ Write-Host "========== Client Domain Join Started =========="
 
 # Domain Administrator Credentials
 $Password = ConvertTo-SecureString `
-"P@ssw0rd123" `
+"V@grant2026!" `
 -AsPlainText `
 -Force
 

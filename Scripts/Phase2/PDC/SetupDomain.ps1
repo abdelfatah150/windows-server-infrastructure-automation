@@ -21,7 +21,7 @@ foreach ($feature in $features)
 
 # Create DSRM Password
 $DSRMPassword = ConvertTo-SecureString `
-"123@asd" `
+"V@grant2026!" `
 -AsPlainText `
 -Force
 

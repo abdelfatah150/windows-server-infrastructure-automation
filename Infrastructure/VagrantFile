@@ -3,93 +3,127 @@
 
 Vagrant.configure("2") do |config|
 
+  ####################################################
   # Global Configuration
+  ####################################################
 
   config.vm.box_check_update = false
 
+  config.winrm.username = "vagrant"
+  config.winrm.password = "vagrant"
+  config.winrm.transport = :negotiate
 
+  config.winrm.timeout = 1000
+  config.winrm.retry_limit = 5
+  config.vm.boot_timeout = 1200
+
+  ####################################################
   # Primary Domain Controller (PDC)
-  
+  ####################################################
+
   config.vm.define "PDC" do |pdc|
 
     pdc.vm.box = "StefanScherer/windows_2019"
     pdc.vm.box_version = "2020.02.12"
 
-    pdc.vm.network "private_network", ip: "192.168.1.2"
+    pdc.vm.hostname = "PDC"
 
-    pdc.vm.provider "hyperv" do |hy|
+    pdc.vm.network "private_network", ip: "192.168.10.2"
 
-      hy.name = "PDC"
-      hy.gui = true
-
-      hy.memory = 2048
-      hy.cpus = 2
-
+    pdc.vm.provider "hyperv" do |hv|
+      hv.vmname = "PDC"
+      hv.memory = 4096
+      hv.cpus = 2
+      hv.enable_virtualization_extensions = true
     end
 
-    #Phase 1
-    pdc.vm.provision "shell", path: "Infrastructure\Scripts\Phase1\PDC\InitialSetup.ps1"
+    # Phase 1
+    pdc.vm.provision "shell",
+      path: "../Scripts/Phase1/PDC/InitialSetup.ps1",
+      reboot: true
 
-    #Phase 2
-    pdc.vm.provision "shell", path: "Infrastructure\Scripts\Phase2\PDC\SetupDomain.ps1"
-    pdc.vm.provision "shell", path: "Infrastructure\Scripts\Phase2\PDC\EnableRecycleBin.ps1"
+    # Phase 2
+    pdc.vm.provision "shell",
+      path: "../Scripts/Phase2/PDC/SetupDomain.ps1",
+      reboot: true
+
+    pdc.vm.provision "shell",
+      path: "../Scripts/Phase2/PDC/EnableRecycleBin.ps1"
+
+    # Phase 3
+    pdc.vm.provision "shell",
+      path: "../Scripts/Phase3/CreateOUs.ps1"
+
+    pdc.vm.provision "shell",
+      path: "../Scripts/Phase3/CreateGroups.ps1"
+
+    pdc.vm.provision "shell",
+      path: "../Scripts/Phase3/CreateUsers.ps1"
+
+    pdc.vm.provision "shell",
+      path: "../Scripts/Phase3/PasswordPolicy.ps1"
 
   end
 
-
+  ####################################################
   # Additional Domain Controller (ADC)
+  ####################################################
 
   config.vm.define "ADC" do |adc|
 
     adc.vm.box = "StefanScherer/windows_2019"
     adc.vm.box_version = "2020.02.12"
 
-    adc.vm.network "private_network", ip: "192.168.1.3"
+    adc.vm.hostname = "ADC"
 
-    adc.vm.provider "hyperv" do |hy|
+    adc.vm.network "private_network", ip: "192.168.10.3"
 
-      hy.name = "ADC"
-      hy.gui = true
-
-      hy.memory = 2048
-      hy.cpus = 2
-
+    adc.vm.provider "hyperv" do |hv|
+      hv.vmname = "ADC"
+      hv.memory = 4096
+      hv.cpus = 2
+      hv.enable_virtualization_extensions = true
     end
 
-    #Phase 1
-    adc.vm.provision "shell", path: "Infrastructure\Scripts\Phase1\ADC\InitialSetup.ps1"
+    # Phase 1
+    adc.vm.provision "shell",
+      path: "../Scripts/Phase1/ADC/InitialSetup.ps1",
+      reboot: true
 
-    #Phase 2
-    adc.vm.provision "shell", path: "Infrastructure\Scripts\Phase2\ADC\SetupADC.ps1"
+    # Phase 2
+    adc.vm.provision "shell",
+      path: "../Scripts/Phase2/ADC/SetupADC.ps1"
 
   end
 
+  ####################################################
+  # Client
+  ####################################################
 
-  # Client Machine
+  # config.vm.define "CLIENT" do |client|
 
-  config.vm.define "CLIENT" do |client|
+  #   client.vm.box = "gusztavvargadr/windows-11-24h2-enterprise"
 
-    client.vm.box = "gusztavvargadr/windows-10"
-    client.vm.box_version = "2511.0.0"
+  #   client.vm.hostname = "CLIENT"
 
-    client.vm.network "private_network", ip: "192.168.1.22"
+  #   client.vm.network "private_network", ip: "192.168.10.10"
 
-    client.vm.provider "hyperv" do |hy|
+  #   client.vm.provider "hyperv" do |hv|
+  #     hv.vmname = "CLIENT"
+  #     hv.memory = 4096
+  #     hv.cpus = 2
+  #     hv.enable_virtualization_extensions = true
+  #   end
 
-      hy.name = "CLIENT"
-      hy.gui = true
+  #   # Phase 1
+  #   client.vm.provision "shell",
+  #     path: "../Scripts/Phase1/CLIENT/InitialSetup.ps1",
+  #     reboot: true
 
-      hy.memory = 2048
-      hy.cpus = 2
+  #   # Phase 2
+  #   client.vm.provision "shell",
+  #     path: "../Scripts/Phase2/CLIENT/JoinDomain.ps1"
 
-    end
-
-    #Phase 1
-    client.vm.provision "shell", path: "Infrastructure\Scripts\Phase1\CLIENT\InitialSetup.ps1"
-
-    #Phase 2
-    client.vm.provision "shell", path: "Infrastructure\Scripts\Phase2\CLIENT\JoinDomain.ps1"
-
-  end
+  # end
 
 end
