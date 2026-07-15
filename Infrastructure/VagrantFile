@@ -3,24 +3,15 @@
 
 Vagrant.configure("2") do |config|
 
-  ####################################################
   # Global Configuration
-  ####################################################
-
   config.vm.box_check_update = false
 
-  config.winrm.username = "vagrant"
-  config.winrm.password = "vagrant"
-  config.winrm.transport = :negotiate
-
+  # WinRM Configuration
   config.winrm.timeout = 1000
-  config.winrm.retry_limit = 5
-  config.vm.boot_timeout = 1200
+  config.winrm.retry_limit = 3
+  config.vm.boot_timeout = 1000
 
-  ####################################################
   # Primary Domain Controller (PDC)
-  ####################################################
-
   config.vm.define "PDC" do |pdc|
 
     pdc.vm.box = "StefanScherer/windows_2019"
@@ -30,11 +21,9 @@ Vagrant.configure("2") do |config|
 
     pdc.vm.network "private_network", ip: "192.168.10.2"
 
-    pdc.vm.provider "hyperv" do |hv|
-      hv.vmname = "PDC"
-      hv.memory = 4096
-      hv.cpus = 2
-      hv.enable_virtualization_extensions = true
+    pdc.vm.provider "hyperv" do |hy|
+      hy.memory = 2048
+      hy.cpus = 2
     end
 
     # Phase 1
@@ -44,8 +33,7 @@ Vagrant.configure("2") do |config|
 
     # Phase 2
     pdc.vm.provision "shell",
-      path: "../Scripts/Phase2/PDC/SetupDomain.ps1",
-      reboot: true
+      path: "../Scripts/Phase2/PDC/SetupDomain.ps1"
 
     pdc.vm.provision "shell",
       path: "../Scripts/Phase2/PDC/EnableRecycleBin.ps1"
@@ -63,12 +51,23 @@ Vagrant.configure("2") do |config|
     pdc.vm.provision "shell",
       path: "../Scripts/Phase3/PasswordPolicy.ps1"
 
+    # Phase 4
+    pdc.vm.provision "shell",
+      path: "../Scripts/Phase4/ConfigureDHCP.ps1"
+
+    pdc.vm.provision "shell",
+      path: "../Scripts/Phase4/ConfigureDHCPFailover.ps1"
+
+    pdc.vm.provision "shell",
+      path: "../Scripts/Phase4/ConfigureDNS.ps1"
+
+    pdc.vm.provision "shell",
+      path: "../Scripts/Phase4/ConfigureIIS.ps1"
+
+
   end
 
-  ####################################################
   # Additional Domain Controller (ADC)
-  ####################################################
-
   config.vm.define "ADC" do |adc|
 
     adc.vm.box = "StefanScherer/windows_2019"
@@ -78,11 +77,9 @@ Vagrant.configure("2") do |config|
 
     adc.vm.network "private_network", ip: "192.168.10.3"
 
-    adc.vm.provider "hyperv" do |hv|
-      hv.vmname = "ADC"
-      hv.memory = 4096
-      hv.cpus = 2
-      hv.enable_virtualization_extensions = true
+    adc.vm.provider "hyperv" do |hy|
+      hy.memory = 2048
+      hy.cpus = 2
     end
 
     # Phase 1
@@ -94,36 +91,35 @@ Vagrant.configure("2") do |config|
     adc.vm.provision "shell",
       path: "../Scripts/Phase2/ADC/SetupADC.ps1"
 
+    # Phase 4
+    adc.vm.provision "shell",
+      path: "../Scripts/Phase4/ConfigureIIS.ps1"
+
   end
 
-  ####################################################
   # Client
-  ####################################################
+  config.vm.define "CLIENT" do |client|
 
-  # config.vm.define "CLIENT" do |client|
+    client.vm.box = "gusztavvargadr/windows-11-24h2-enterprise"
 
-  #   client.vm.box = "gusztavvargadr/windows-11-24h2-enterprise"
+    client.vm.hostname = "CLIENT"
 
-  #   client.vm.hostname = "CLIENT"
+    client.vm.network "private_network", ip: "192.168.10.10"
 
-  #   client.vm.network "private_network", ip: "192.168.10.10"
+    client.vm.provider "hyperv" do |hy|
+      hy.memory = 2048
+      hy.cpus = 2
+    end
 
-  #   client.vm.provider "hyperv" do |hv|
-  #     hv.vmname = "CLIENT"
-  #     hv.memory = 4096
-  #     hv.cpus = 2
-  #     hv.enable_virtualization_extensions = true
-  #   end
+    # Phase 1
+    client.vm.provision "shell",
+      path: "../Scripts/Phase1/CLIENT/InitialSetup.ps1",
+      reboot: true
 
-  #   # Phase 1
-  #   client.vm.provision "shell",
-  #     path: "../Scripts/Phase1/CLIENT/InitialSetup.ps1",
-  #     reboot: true
+    # Phase 2
+    client.vm.provision "shell",
+      path: "../Scripts/Phase2/CLIENT/JoinDomain.ps1"
 
-  #   # Phase 2
-  #   client.vm.provision "shell",
-  #     path: "../Scripts/Phase2/CLIENT/JoinDomain.ps1"
-
-  # end
+  end
 
 end
