@@ -1,43 +1,15 @@
-Write-Host "========== Creating Users =========="
+Write-Host "========== Configuring DNS =========="
 
-Import-Module ActiveDirectory
+# www.final.local -> PDC
+Add-DnsServerResourceRecordA `
+    -Name "www" `
+    -ZoneName "Final.local" `
+    -IPv4Address "192.168.10.2"
 
-$Users = Import-Csv ".\Users.csv"
+# www.final.local -> ADC
+Add-DnsServerResourceRecordA `
+    -Name "www" `
+    -ZoneName "Final.local" `
+    -IPv4Address "192.168.10.3"
 
-foreach ($User in $Users)
-{
-
-    $SecurePassword = ConvertTo-SecureString `
-        $User.Password `
-        -AsPlainText `
-        -Force
-
-    if (-not (Get-ADUser -Filter "SamAccountName -eq '$($User.Username)'" -ErrorAction SilentlyContinue))
-    {
-
-        New-ADUser `
-            -Name "$($User.FirstName) $($User.LastName)" `
-            -GivenName $User.FirstName `
-            -Surname $User.LastName `
-            -SamAccountName $User.Username `
-            -UserPrincipalName "$($User.Username)@Final.local" `
-            -Department $User.Department `
-            -Path "OU=$($User.Department),DC=Final,DC=local" `
-            -AccountPassword $SecurePassword `
-            -Enabled $true `
-            -ChangePasswordAtLogon $false
-
-        Add-ADGroupMember `
-            -Identity $User.Group `
-            -Members $User.Username
-
-        Write-Host "$($User.Username) Created Successfully."
-
-    }
-
-    else
-    {
-        Write-Host "$($User.Username) Already Exists."
-    }
-
-}
+Write-Host "DNS Round Robin Configured Successfully."

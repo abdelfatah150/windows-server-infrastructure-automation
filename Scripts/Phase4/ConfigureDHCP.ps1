@@ -1,36 +1,29 @@
-Write-Host "========== Creating Security Groups =========="
+Write-Host "========== Configuring DHCP =========="
 
-Import-Module ActiveDirectory
+# Create DHCP Scope
+Add-DhcpServerv4Scope `
+    -Name "Final Scope" `
+    -StartRange 192.168.10.40 `
+    -EndRange 192.168.10.230 `
+    -SubnetMask 255.255.255.0 `
+    -State Active
 
-$Groups = @{
+# Add Exclusion Range
+Add-DhcpServerv4ExclusionRange `
+    -ScopeId 192.168.10.0 `
+    -StartRange 192.168.10.80 `
+    -EndRange 192.168.10.85
 
-    "HR"    = "HR_Users"
-    "Sales" = "Sales_Users"
-    "Dev"   = "Dev_Users"
-    "IT"    = "IT_Users"
+# Set Lease Duration (8 Days)
+Set-DhcpServerv4Scope `
+    -ScopeId 192.168.10.0 `
+    -LeaseDuration 8.00:00:00
 
-}
+# Configure DHCP Options
+Set-DhcpServerv4OptionValue `
+    -ScopeId 192.168.10.0 `
+    -DnsDomain "Final.local" `
+    -DnsServer 192.168.10.2 `
+    -Router 192.168.10.1
 
-foreach ($Department in $Groups.Keys)
-{
-
-    $Group = $Groups[$Department]
-
-    if (-not (Get-ADGroup -Filter "Name -eq '$Group'" -ErrorAction SilentlyContinue))
-    {
-
-        New-ADGroup `
-            -Name $Group `
-            -GroupScope Global `
-            -GroupCategory Security `
-            -Path "OU=$Department,DC=Final,DC=local"
-
-        Write-Host "$Group Created Successfully."
-
-    }
-    else
-    {
-        Write-Host "$Group Already Exists."
-    }
-
-}
+Write-Host "DHCP Configuration Completed."

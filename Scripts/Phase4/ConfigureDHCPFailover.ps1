@@ -1,26 +1,10 @@
-Write-Host "========== Creating Organizational Units =========="
+Write-Host "========== Configuring DHCP Failover =========="
 
-Import-Module ActiveDirectory
+Add-DhcpServerv4Failover `
+    -Name "Final-DHCP-Failover" `
+    -ComputerName "PDC" `
+    -PartnerServer "ADC" `
+    -ScopeId 192.168.10.0 `
+    -SharedSecret "Final@123"
 
-$OUs = @(
-    "HR",
-    "Sales",
-    "Dev",
-    "IT"
-)
-
-foreach ($OU in $OUs)
-{
-    if (-not (Get-ADOrganizationalUnit -Filter "Name -eq '$OU'" -ErrorAction SilentlyContinue))
-    {
-        New-ADOrganizationalUnit `
-            -Name $OU `
-            -Path "DC=Final,DC=local"
-
-        Write-Host "$OU OU Created Successfully."
-    }
-    else
-    {
-        Write-Host "$OU Already Exists."
-    }
-}
+Write-Host "DHCP Failover Configured Successfully."

@@ -1,11 +1,27 @@
-Write-Host "========== Configuring Password Policy =========="
+Write-Host "========== Configuring IIS =========="
 
-Import-Module ActiveDirectory
+# Install IIS
+Install-WindowsFeature Web-Server -IncludeManagementTools
 
-Set-ADDefaultDomainPasswordPolicy `
-    -Identity "Final.local" `
-    -MaxPasswordAge (New-TimeSpan -Days 60) `
-    -MinPasswordLength 6 `
-    -PasswordHistoryCount 3
+# Get Current Server Name
+$ServerName = $env:COMPUTERNAME
 
-Write-Host "Password Policy Configured Successfully."
+$html = @"
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Final.local</title>
+</head>
+<body style="font-family: Arial; text-align:center; margin-top:150px;">
+    <h1>Welcome to Final.local</h1>
+    <h2>$ServerName</h2>
+    <p>Windows Server Infrastructure Automation Project</p>
+</body>
+</html>
+"@
+
+Set-Content -Path "C:\inetpub\wwwroot\index.html" -Value $html
+
+Restart-Service W3SVC
+
+Write-Host "IIS Configuration Completed."
