@@ -7,9 +7,9 @@ Vagrant.configure("2") do |config|
   config.vm.box_check_update = false
 
   # WinRM Configuration
-  config.winrm.timeout = 1000
-  config.winrm.retry_limit = 3
-  config.vm.boot_timeout = 1000
+  config.winrm.timeout = 1800
+  config.winrm.retry_limit = 30
+  config.vm.boot_timeout = 1800
 
   # Primary Domain Controller (PDC)
   config.vm.define "PDC" do |pdc|
@@ -17,13 +17,16 @@ Vagrant.configure("2") do |config|
     pdc.vm.box = "StefanScherer/windows_2019"
     pdc.vm.box_version = "2020.02.12"
 
+    # pdc.vm.box = "dstoliker/winserver2019"
+    # pdc.vm.box_version = "1.0.20231020172206"
+
     pdc.vm.hostname = "PDC"
 
     pdc.vm.network "private_network", ip: "192.168.10.2"
 
     pdc.vm.provider "hyperv" do |hy|
-      hy.memory = 2048
-      hy.cpus = 2
+      hy.memory = 4096
+      hy.cpus = 3
     end
 
     # Phase 1
@@ -51,75 +54,78 @@ Vagrant.configure("2") do |config|
     pdc.vm.provision "shell",
       path: "../Scripts/Phase3/PasswordPolicy.ps1"
 
-    # Phase 4
-    pdc.vm.provision "shell",
-      path: "../Scripts/Phase4/ConfigureDHCP.ps1"
+    # # Phase 4
+    # pdc.vm.provision "shell",
+    #   path: "../Scripts/Phase4/ConfigureDHCP.ps1"
 
-    pdc.vm.provision "shell",
-      path: "../Scripts/Phase4/ConfigureDHCPFailover.ps1"
+    # pdc.vm.provision "shell",
+    #   path: "../Scripts/Phase4/ConfigureDHCPFailover.ps1"
 
-    pdc.vm.provision "shell",
-      path: "../Scripts/Phase4/ConfigureDNS.ps1"
+    # pdc.vm.provision "shell",
+    #   path: "../Scripts/Phase4/ConfigureDNS.ps1"
 
-    pdc.vm.provision "shell",
-      path: "../Scripts/Phase4/ConfigureIIS.ps1"
-
+    # pdc.vm.provision "shell",
+    #   path: "../Scripts/Phase4/ConfigureIIS.ps1"
 
   end
 
   # Additional Domain Controller (ADC)
-  config.vm.define "ADC" do |adc|
+  # config.vm.define "ADC" do |adc|
 
-    adc.vm.box = "StefanScherer/windows_2019"
-    adc.vm.box_version = "2020.02.12"
+  #   adc.vm.box = "StefanScherer/windows_2019"
+  #   adc.vm.box_version = "2020.02.12"
 
-    adc.vm.hostname = "ADC"
+  #   # adc.vm.box = "dstoliker/winserver2019"
+  #   # adc.vm.box_version = "1.0.20231020172206"
 
-    adc.vm.network "private_network", ip: "192.168.10.3"
+  #   adc.vm.hostname = "ADC"
 
-    adc.vm.provider "hyperv" do |hy|
-      hy.memory = 2048
-      hy.cpus = 2
-    end
+  #   adc.vm.network "private_network", ip: "192.168.10.3"
 
-    # Phase 1
-    adc.vm.provision "shell",
-      path: "../Scripts/Phase1/ADC/InitialSetup.ps1",
-      reboot: true
+  #   adc.vm.provider "hyperv" do |hy|
+  #     hy.memory = 4096
+  #     hy.cpus = 3
+  #   end
 
-    # Phase 2
-    adc.vm.provision "shell",
-      path: "../Scripts/Phase2/ADC/SetupADC.ps1"
+  #   # Phase 1
+  #   adc.vm.provision "shell",
+  #     path: "../Scripts/Phase1/ADC/InitialSetup.ps1",
+  #     reboot: true
 
-    # Phase 4
-    adc.vm.provision "shell",
-      path: "../Scripts/Phase4/ConfigureIIS.ps1"
+    # # Phase 2
+    # adc.vm.provision "shell",
+    #   path: "../Scripts/Phase2/ADC/SetupADC.ps1"
 
-  end
+    # # Phase 4
+    # adc.vm.provision "shell",
+    #   path: "../Scripts/Phase4/ConfigureIIS.ps1"
+
+  # end
 
   # Client
-  config.vm.define "CLIENT" do |client|
+  # config.vm.define "CLIENT" do |client|
 
-    client.vm.box = "gusztavvargadr/windows-11-24h2-enterprise"
+  #   client.vm.box = "gusztavvargadr/windows-11"
+  #   client.vm.box_version = "2601.0.0"
 
-    client.vm.hostname = "CLIENT"
+  #   client.vm.hostname = "CLIENT"
 
-    client.vm.network "private_network", ip: "192.168.10.10"
+  #   client.vm.network "private_network", ip: "192.168.10.10"
 
-    client.vm.provider "hyperv" do |hy|
-      hy.memory = 2048
-      hy.cpus = 2
-    end
+  #   client.vm.provider "virtualbox" do |vb|
+  #     vb.memory = 2048
+  #     vb.cpus = 2
+  #   end
 
-    # Phase 1
-    client.vm.provision "shell",
-      path: "../Scripts/Phase1/CLIENT/InitialSetup.ps1",
-      reboot: true
+    # # Phase 1
+    # client.vm.provision "shell",
+    #   path: "../Scripts/Phase1/CLIENT/InitialSetup.ps1",
+    #   reboot: true
 
-    # Phase 2
-    client.vm.provision "shell",
-      path: "../Scripts/Phase2/CLIENT/JoinDomain.ps1"
+    # # Phase 2
+    # client.vm.provision "shell",
+    #   path: "../Scripts/Phase2/CLIENT/JoinDomain.ps1"
 
-  end
+  # end
 
 end
